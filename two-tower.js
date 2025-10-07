@@ -55,7 +55,10 @@ class TwoTowerModel {
      * @returns {tf.Tensor} [batch, embeddingDim]
      */
     userForward(userIndices) {
-        return tf.gather(this.userEmbeddings, userIndices);
+        const idx = Array.isArray(userIndices)
+            ? tf.tensor1d(userIndices, 'int32')
+            : tf.cast(userIndices, 'int32');
+        return tf.gather(this.userEmbeddings, idx);
     }
 
     /**
@@ -64,7 +67,10 @@ class TwoTowerModel {
      * @returns {tf.Tensor} [batch, embeddingDim]
      */
     itemForward(itemIndices) {
-        return tf.gather(this.itemEmbeddings, itemIndices);
+        const idx = Array.isArray(itemIndices)
+            ? tf.tensor1d(itemIndices, 'int32')
+            : tf.cast(itemIndices, 'int32');
+        return tf.gather(this.itemEmbeddings, idx);
     }
 
     /**
@@ -115,7 +121,8 @@ class TwoTowerModel {
      */
     getUserEmbedding(userIndex) {
         return tf.tidy(() => {
-            return this.userForward([userIndex]).squeeze();
+            const idx = tf.tensor1d([userIndex], 'int32');
+            return this.userForward(idx).squeeze();
         });
     }
 
@@ -224,8 +231,11 @@ class DeepTwoTowerModel {
      */
     userForward(userIndices) {
         return tf.tidy(() => {
-            const idEmb = tf.gather(this.userEmbeddings, userIndices);
-            const feat = tf.gather(this.userFeatures, userIndices);
+            const idx = Array.isArray(userIndices)
+                ? tf.tensor1d(userIndices, 'int32')
+                : tf.cast(userIndices, 'int32');
+            const idEmb = tf.gather(this.userEmbeddings, idx);
+            const feat = tf.gather(this.userFeatures, idx);
             let featProj = tf.add(tf.matMul(feat, this.userFeatWeight), this.userFeatBias);
             featProj = tf.relu(featProj);
             const concat = tf.concat([idEmb, featProj], 1);
@@ -243,8 +253,11 @@ class DeepTwoTowerModel {
      */
     itemForward(itemIndices) {
         return tf.tidy(() => {
-            const idEmb = tf.gather(this.itemEmbeddings, itemIndices);
-            const feat = tf.gather(this.itemFeatures, itemIndices);
+            const idx = Array.isArray(itemIndices)
+                ? tf.tensor1d(itemIndices, 'int32')
+                : tf.cast(itemIndices, 'int32');
+            const idEmb = tf.gather(this.itemEmbeddings, idx);
+            const feat = tf.gather(this.itemFeatures, idx);
             let featProj = tf.add(tf.matMul(feat, this.itemFeatWeight), this.itemFeatBias);
             featProj = tf.relu(featProj);
             const concat = tf.concat([idEmb, featProj], 1);
@@ -297,7 +310,8 @@ class DeepTwoTowerModel {
      */
     getUserEmbedding(userIndex) {
         return tf.tidy(() => {
-            return this.userForward([userIndex]).squeeze();
+            const idx = tf.tensor1d([userIndex], 'int32');
+            return this.userForward(idx).squeeze();
         });
     }
 
@@ -316,7 +330,7 @@ class DeepTwoTowerModel {
             // Expand user embedding to [embeddingDim, 1] for matmul
             const userCol = userEmbedding.reshape([this.embeddingDim, 1]);
             // Compute all item tower outputs
-            const allItemEmb = this.itemForward(tf.range(0, this.numItems));
+            const allItemEmb = this.itemForward(tf.range(0, this.numItems, 1, 'int32'));
             const scores = tf.matMul(allItemEmb, userCol).squeeze();
             return scores.dataSync();
         });

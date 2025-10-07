@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!--
+      Simple in‑browser MovieLens recommender demo.
+
+      This page defines the user interface for a two‑tower retrieval model.
+      The baseline model uses only user and item id embeddings, while the
+      deep model additionally incorporates user demographics (age, gender,
+      occupation) and movie genres. Users can load the dataset, train both
+      models, and test on a randomly selected user.  The UI presents
+      historical top‑rated movies alongside recommendations from the
+      baseline and deep models.
+    -->
+    <title>MovieLens Two‑Tower Recommender with Deep Model</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .controls { margin: 20px 0; }
+        button { padding: 10px 15px; margin: 5px; font-size: 16px; }
+        button:disabled { opacity: 0.5; }
+        .status { margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .chart-container { margin: 20px 0; }
+        canvas { border: 1px solid #ccc; }
+        .results { margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        /* Flex layout for three lists */
+        .side-by-side { display: flex; gap: 20px; }
+        .side-by-side > div { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MovieLens Two‑Tower Recommender Demo</h1>
+        <p>
+            This demo trains two models directly in your browser using the
+            <em>MovieLens 100K</em> dataset. The first model is a classic
+            two‑tower retrieval model that learns user and movie embeddings.
+            The second model extends the towers with a multi‑layer
+            perceptron (MLP) that consumes user demographics (age, gender,
+            occupation) and movie genre indicators. After training, you can
+            test the models by selecting a random user and comparing their
+            historical top‑rated movies to the recommendations from both
+            models.
+        </p>
+        <ul>
+            <li>Click <strong>Load Data</strong> to fetch and parse the rating
+                and metadata files (<code>u.data</code>, <code>u.item</code>,
+                <code>u.user</code>). These files must reside in the
+                <code>data/</code> folder relative to this page. The
+                <code>u.item</code> file includes 19 genre flags per movie
+                after the movie metadata, and the <code>u.user</code> file
+                includes age, gender, occupation and zip code for each user
+                【306143198213293†L117-L126】【306143198213293†L131-L134】.</li>
+            <li>After loading, press <strong>Train</strong> to fit both
+                models. A loss curve will update live on the left, and a PCA
+                projection of the baseline item embeddings will render on the
+                right when training completes. Training 20 epochs on 80k
+                interactions with 32‑dimensional embeddings typically
+                finishes within a minute in modern browsers.</li>
+            <li>Finally, press <strong>Test</strong> to sample a user with at
+                least 20 ratings. The resulting table shows the user’s
+                historical top‑10 movies, the baseline model’s top‑10
+                recommendations (excluding previously rated items), and the
+                deep model’s top‑10 recommendations.</li>
+        </ul>
+        <p style="font-size: 0.9em; color: #555;">
+            To deploy this demo on GitHub Pages, copy all HTML, JavaScript and
+            data files into a repository and enable Pages. No server is
+            required—the entire pipeline runs client‑side via
+            TensorFlow.js.
+        </p>
+        <div class="controls">
+            <button id="loadData">Load Data</button>
+            <button id="train" disabled>Train</button>
+            <button id="test" disabled>Test</button>
+        </div>
+        <div id="status" class="status">Ready to load data…</div>
+        <div class="chart-container">
+            <h3>Training Loss (baseline)</h3>
+            <canvas id="lossChart" width="800" height="300"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Baseline Item Embeddings (PCA)</h3>
+            <canvas id="embeddingChart" width="800" height="600"></canvas>
+        </div>
+        <div id="results" class="results"></div>
+    </div>
+    <!-- TensorFlow.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <!-- Model implementations -->
+    <script src="two-tower.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
